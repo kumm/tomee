@@ -567,13 +567,31 @@ public class OpenEJBContextConfig extends ContextConfig {
         internalProcessAnnotations(currentUrlAsFile, webAppInfo, fragment);
     }
 
+    private boolean isIncludedInAdditionalRepos(File currentUrlAsFile) {
+        if (context.getLoader() != null && LazyStopWebappClassLoader.class.isInstance(context.getLoader().getClassLoader())) {
+            final Collection<File> repos = LazyStopWebappClassLoader.class.cast(context.getLoader().getClassLoader()).getAdditionalRepos();
+            if (repos != null) {
+                for (File repo : repos) {
+                    try {
+                        if (isIncludedIn(repo.toURI().toURL().toExternalForm(), currentUrlAsFile)) {
+                            return true;
+                        }
+                    } catch (MalformedURLException ex) {
+                        logger.error(ex.getMessage(), ex);
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
     private void internalProcessAnnotations(final File currentUrlAsFile, final WebAppInfo webAppInfo, final WebXml fragment) {
         for (final ClassListInfo webAnnotated : webAppInfo.webAnnotatedClasses) {
             try {
-                if (!isIncludedIn(webAnnotated.name, currentUrlAsFile)) {
+                if (!isIncludedIn(webAnnotated.name, currentUrlAsFile)
+                        && !isIncludedInAdditionalRepos(currentUrlAsFile)) {
                     continue;
                 }
-
                 internalProcessAnnotationsStream(webAnnotated.list, fragment, false);
             } catch (final MalformedURLException e) {
                 throw new IllegalArgumentException(e);
