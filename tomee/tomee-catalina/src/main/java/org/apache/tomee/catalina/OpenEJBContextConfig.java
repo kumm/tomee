@@ -521,7 +521,7 @@ public class OpenEJBContextConfig extends ContextConfig {
 
     @Override
     protected void processAnnotationsUrl(final URL currentUrl, final WebXml fragment, final boolean handlesTypeOnly) {
-        if (NewLoaderLogic.skip(currentUrl)) { // we potentially see all common loader urls
+        if (currentUrl == null || NewLoaderLogic.skip(currentUrl)) { // we potentially see all common loader urls
             return;
         }
 
